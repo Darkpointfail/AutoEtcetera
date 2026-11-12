@@ -317,7 +317,16 @@ vid.addEventListener('canplaythrough',loaderDone);
 vid.addEventListener('seeked',()=>{needDraw=true});
 setTimeout(loaderDone,9000);
 function draw(zoom){if(!vReady)return false;const W=cv.width,H=cv.height,vw=vid.videoWidth,vh=vid.videoHeight;
-  const s=Math.max(W/vw,H/vh)*zoom,w=vw*s,h=vh*s;cx.imageSmoothingQuality='high';cx.drawImage(vid,(W-w)/2,(H-h)*.42,w,h);return true}
+  cx.imageSmoothingQuality='high';
+  if(H/W<1.2){const s=Math.max(W/vw,H/vh)*zoom,w=vw*s,h=vh*s;cx.drawImage(vid,(W-w)/2,(H-h)*.42,w,h);return true}
+  // Téléphone (écran vertical) : au lieu de couper 75 % de l'image, on montre une bande plus large
+  // qui se resserre doucement sur la Ferrari à mesure qu'elle avance, avec un fondu vers le noir en haut et en bas.
+  const k=ease(clamp(vid.currentTime/vid.duration)),s=W*1.9/vw*(1+.75*k)*zoom,w=vw*s,h=Math.min(vh*s,H*1.1),sh=h/s;
+  const y=(H-h)*.45,sy=(vh-sh)*.5;
+  cx.fillStyle='#090909';cx.fillRect(0,0,W,H);
+  cx.drawImage(vid,0,sy,vw,sh,(W-w)/2,y,w,h);
+  const f=h*.22;for(const [a,b] of [[y,y+f],[y+h,y+h-f]]){const g=cx.createLinearGradient(0,a,0,b);g.addColorStop(0,'#090909');g.addColorStop(1,'rgba(9,9,9,0)');cx.fillStyle=g;cx.fillRect(0,Math.min(a,b)-1,W,f+2)}
+  return true}
 
 // ---------- texte du manifeste mot par mot ----------
 const mt=$('#mtxt');mt.innerHTML=mt.textContent.split(' ').map(w=>'<span>'+w+'</span> ').join('');
