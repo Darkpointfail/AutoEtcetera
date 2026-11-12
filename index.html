@@ -304,6 +304,9 @@ const FPS=24, cv=$('#intro canvas'), cx=cv.getContext('2d');
 const vid=document.createElement('video');
 Object.assign(vid,{muted:true,playsInline:true,preload:'auto'});vid.setAttribute('muted','');vid.setAttribute('playsinline','');
 vid.src='intro.mp4';let vReady=false,needDraw=true,vDone=false;
+// iPhone : Safari ne charge pas une vidéo tant qu'elle n'a pas démarré. On la lance (muette) puis on la met en pause.
+function wake(){const pr=vid.play();if(pr&&pr.then)pr.then(()=>vid.pause()).catch(()=>{})}
+wake();addEventListener('touchstart',wake,{once:true,passive:true});
 function fit(){const d=Math.min(devicePixelRatio||1,2);cv.width=innerWidth*d;cv.height=innerHeight*d;needDraw=true}
 fit();addEventListener('resize',fit);
 function loaderSet(k){$$('#loader .lights i').forEach((l,j)=>l.classList.toggle('on',j<Math.round(k*10)));$('#loader .n').textContent=Math.round(k*100)+'%'}
