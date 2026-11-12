@@ -179,6 +179,98 @@ footer .cols b{display:block;color:var(--fg);font-weight:400;margin-bottom:8px;l
 
 .reveal{opacity:0;transform:translateY(40px);transition:opacity 1.2s,transform 1.2s cubic-bezier(.2,.7,.2,1)}
 .reveal.in{opacity:1;transform:none}
+
+/* ================= TÉLÉPHONE (le PC n'est pas touché) ================= */
+.burger,#mnav{display:none}
+@media(max-width:800px){
+  html{scroll-behavior:smooth}
+  nav.top{padding:18px 6vw}
+  nav.top .logo{font-size:10px;letter-spacing:.38em}
+  .burger{display:block;position:relative;width:30px;height:22px;background:none;border:0;color:#fff;padding:0}
+  .burger i{position:absolute;left:0;right:0;height:1px;background:currentColor;transition:transform .45s cubic-bezier(.7,0,.2,1),top .45s}
+  .burger i:first-child{top:7px}.burger i:last-child{top:15px}
+  body.menu .burger i:first-child{top:11px;transform:rotate(45deg)}body.menu .burger i:last-child{top:11px;transform:rotate(-45deg)}
+  #mnav{display:flex;flex-direction:column;justify-content:center;gap:4px;position:fixed;inset:0;z-index:49;background:#070707;padding:90px 8vw 40px;
+    clip-path:inset(0 0 100% 0);transition:clip-path .7s cubic-bezier(.7,0,.2,1);visibility:hidden}
+  body.menu #mnav{clip-path:inset(0);visibility:visible}
+  #mnav>a{font-family:"Cormorant Garamond",serif;font-size:44px;line-height:1.25;color:var(--fg);display:flex;align-items:baseline;gap:16px;
+    opacity:0;transform:translateY(24px);transition:opacity .5s,transform .5s}
+  #mnav>a small{font:400 10px Inter,sans-serif;letter-spacing:.2em;color:var(--gold)}
+  body.menu #mnav>a{opacity:1;transform:none}
+  body.menu #mnav>a:nth-child(2){transition-delay:.06s}body.menu #mnav>a:nth-child(3){transition-delay:.12s}
+  body.menu #mnav>a:nth-child(4){transition-delay:.18s}body.menu #mnav>a:nth-child(5){transition-delay:.24s}
+  #mnav .mfoot{margin-top:48px;border-top:1px solid var(--line);padding-top:28px}
+  #mnav .mfoot p{margin-top:20px;color:var(--mute);font-size:12px;line-height:1.7}
+  body.menu{overflow:hidden}
+
+  .btn{padding:15px 22px;letter-spacing:.22em;font-size:10px}
+
+  /* intro */
+  #intro .t1 h1{font-size:15vw}
+  #intro .t1 p{font-size:9px;letter-spacing:.3em;margin-top:20px}
+  #intro .t2{bottom:16vh}#intro .t2 h2{font-size:32px}
+  #intro .t3 h2{font-size:13vw}
+  #intro .t3 .btns{flex-direction:column;align-items:center;margin-top:30px}
+  #intro .t3 .btns .btn{width:240px;justify-content:center}
+
+  /* manifeste */
+  #manif{padding:16vh 7vw 12vh}
+  #manif .txt{font-size:29px;line-height:1.2}
+  #manif .stats{margin-top:9vh;gap:34px;padding-top:34px}
+  #manif .stats b{font-size:52px}
+
+  /* voiture vedette : grande photo, compteur en haut, infos en bas */
+  #feat{height:340vh!important}
+  #feat .lab{top:12vh;left:6vw}
+  #feat .tach{width:112px;right:5vw;top:8.5vh}
+  #feat .tach .gear b{font-size:24px}#feat .tach .gear span{font-size:7px}
+  #feat .frame{width:92vw;top:44%}
+  #feat .big{font-size:42vw}
+  #feat .info{left:6vw;bottom:19vh}
+  #feat .info h3{font-size:36px}
+  #feat .info p{font-size:13px;margin-top:8px}
+  #feat .specs{left:6vw;right:6vw;bottom:6vh;text-align:left;grid-template-columns:repeat(3,1fr);gap:10px;border-top:1px solid var(--line);padding-top:16px}
+  #feat .specs div{transform:translateY(14px)}
+  #feat .specs b{font-size:21px}
+  #feat .specs span{font-size:7.5px;letter-spacing:.2em}
+
+  /* services : cartes plein écran qui défilent */
+  #serv .head{top:11vh;left:6vw}
+  #serv .head h2{font-size:40px}
+  #serv .track{padding-left:6vw;gap:4vw}
+  #serv .card{width:84vw;height:56vh;margin-top:18vh}
+  #serv .card div{left:22px;right:22px;bottom:22px}
+  #serv .card h3{font-size:28px}
+  #serv .card p{font-size:13px}
+
+  /* club : texte en bas, ombre du bas vers le haut */
+  #club .shade{background:linear-gradient(0deg,rgba(0,0,0,.92),rgba(0,0,0,.6) 50%,rgba(0,0,0,.25))}
+  #club .txt{left:7vw;right:7vw;max-width:none;top:auto;bottom:9vh}
+  #club .txt h2{font-size:52px}
+  #club .txt p{font-size:14px;margin-bottom:26px}
+  #club .word{font-size:17vw}
+
+  .marquee{padding:22px 0}.marquee div{gap:40px;font-size:30px}
+
+  /* inventaire */
+  #inv{padding:14vh 5vw 12vh}
+  #inv .row{margin-bottom:36px}
+  #inv h2{font-size:48px}
+  .grid{grid-template-columns:1fr;gap:22px}
+  .car .meta{padding:18px 18px 20px}
+
+  /* événements */
+  #ev{height:100svh}
+  #ev h2{font-size:48px}
+  #ev p{font-size:14px}
+
+  /* contact */
+  footer{padding:16vh 6vw 6vh}
+  footer h2{font-size:15vw}
+  footer .btns{flex-direction:column;align-items:center;margin:36px 0 12vh}
+  footer .btns .btn{width:260px;justify-content:center}
+  footer .cols{grid-template-columns:1fr;gap:26px}
+}
 </style>
 </head>
 <body>
@@ -189,8 +281,13 @@ footer .cols b{display:block;color:var(--fg);font-weight:400;margin-bottom:8px;l
 
 <aside id="gearbox"><a href="#intro" data-s="intro"><b>N</b><span>Accueil</span></a><a href="#manif" data-s="manif"><b>1</b><span>La maison</span></a><a href="#feat" data-s="feat"><b>2</b><span>Vedette</span></a><a href="#serv" data-s="serv"><b>3</b><span>Services</span></a><a href="#club" data-s="club"><b>4</b><span>Le Club</span></a><a href="#inv" data-s="inv"><b>5</b><span>Inventaire</span></a><a href="#ev" data-s="ev"><b>6</b><span>Événements</span></a></aside>
 
+<div id="mnav">
+  <a href="#inv"><small>01</small>Voitures</a><a href="#club"><small>02</small>Le Club</a><a href="#serv"><small>03</small>Services</a><a href="#ev"><small>04</small>Événements</a><a href="#contact"><small>05</small>Contact</a>
+  <div class="mfoot"><a class="btn fill" href="tel:+15148522886">+1 514 852-2886</a><p>5760 Ch. de la Côte-de-Liesse, Mont-Royal<br>Sur rendez-vous uniquement</p></div>
+</div>
 <nav class="top">
   <a href="#" class="logo">AUTOMOBILES ETCETERA</a>
+  <button class="burger" aria-label="Menu" aria-expanded="false"><i></i><i></i></button>
   <ul><li><a href="#inv">Voitures</a></li><li><a href="#club">Le Club</a></li><li><a href="#serv">Services</a></li><li><a href="#ev">Événements</a></li><li><a href="#contact">Contact</a></li></ul>
 </nav>
 
@@ -368,6 +465,8 @@ function smoothTick(){if(!smooth.on)return;const d=smooth.target-smooth.cur;
   if(Math.abs(d)<.5){if(smooth.cur!==smooth.target){smooth.cur=smooth.target;smooth.mine=true;scrollTo(0,smooth.cur)}return}
   smooth.cur+=d*.085;smooth.mine=true;scrollTo(0,smooth.cur)}
 
+$('.burger').addEventListener('click',()=>{const o=document.body.classList.toggle('menu');$('.burger').setAttribute('aria-expanded',o)});
+$$('#mnav a').forEach(a=>a.addEventListener('click',()=>{document.body.classList.remove('menu');$('.burger').setAttribute('aria-expanded',false)}));
 let lastF=-1,lastZ=-1,fcur=0,tachR=0;
 const gsec=$$('#gearbox a').map(a=>[a,document.getElementById(a.dataset.s)]);
 function tick(){
@@ -418,7 +517,7 @@ function tick(){
   $('#club .mask img').style.transform=`scale(${1.4-.4*o})`;
   $('#club .word').style.opacity=1-seg(p,.35,.55);$('#club .word').style.letterSpacing=(.06+o*.3)+'em';
   $('#club .shade').style.opacity=seg(p,.55,.75);
-  const ct=$('#club .txt');ct.style.opacity=seg(p,.6,.8);ct.style.transform=`translateY(calc(-50% + ${(1-seg(p,.6,.85))*40}px))`;
+  const ct=$('#club .txt');ct.style.opacity=seg(p,.6,.8);ct.style.transform=innerWidth<=800?`translateY(${(1-seg(p,.6,.85))*40}px)`:`translateY(calc(-50% + ${(1-seg(p,.6,.85))*40}px))`;
 
   // ÉVÉNEMENTS parallaxe
   const er=$('#ev').getBoundingClientRect();$('#ev img').style.transform=`translateY(${(er.top/innerHeight)*-10}%)`;
