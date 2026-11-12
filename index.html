@@ -404,8 +404,11 @@ vid.src='intro.mp4';let vReady=false,needDraw=true,vDone=false;
 // iPhone : Safari ne charge pas une vidéo tant qu'elle n'a pas démarré. On la lance (muette) puis on la met en pause.
 function wake(){const pr=vid.play();if(pr&&pr.then)pr.then(()=>vid.pause()).catch(()=>{})}
 wake();addEventListener('touchstart',wake,{once:true,passive:true});
-function fit(){const d=Math.min(devicePixelRatio||1,2);cv.width=innerWidth*d;cv.height=innerHeight*d;needDraw=true}
-fit();addEventListener('resize',fit);
+// La taille du canvas suit sa vraie taille à l'écran (et pas la fenêtre) : sur iPhone, la barre d'adresse qui se replie
+// au premier scroll changeait la hauteur de la fenêtre et faisait "sauter" l'image.
+function fit(){const d=Math.min(devicePixelRatio||1,2),r=cv.getBoundingClientRect(),w=Math.round(r.width*d),h=Math.round(r.height*d);
+  if(w&&h&&(w!==cv.width||h!==cv.height)){cv.width=w;cv.height=h;needDraw=true}}
+fit();addEventListener('resize',fit);if(window.ResizeObserver)new ResizeObserver(fit).observe(cv);
 function loaderSet(k){$$('#loader .lights i').forEach((l,j)=>l.classList.toggle('on',j<Math.round(k*10)));$('#loader .n').textContent=Math.round(k*100)+'%'}
 function loaderDone(){if(vDone)return;vDone=true;loaderSet(1);$('#loader .lights').classList.add('flash');setTimeout(()=>$('#loader').classList.add('done'),600)}
 vid.addEventListener('progress',()=>{if(vid.duration&&vid.buffered.length){const k=vid.buffered.end(vid.buffered.length-1)/vid.duration;loaderSet(k);if(k>.99)loaderDone()}});
