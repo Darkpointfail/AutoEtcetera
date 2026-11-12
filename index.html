@@ -413,9 +413,11 @@ vid.addEventListener('loadeddata',()=>{vReady=true;needDraw=true});
 vid.addEventListener('canplaythrough',loaderDone);
 vid.addEventListener('seeked',()=>{needDraw=true});
 setTimeout(loaderDone,9000);
+// Cadrage téléphone : plein écran comme à l'origine. Ajouter ?bande à l'adresse pour voir la version en bande.
+const BANDE=/[?&]bande/.test(location.search);
 function draw(zoom){if(!vReady)return false;const W=cv.width,H=cv.height,vw=vid.videoWidth,vh=vid.videoHeight;
   cx.imageSmoothingQuality='high';
-  if(H/W<1.2){const s=Math.max(W/vw,H/vh)*zoom,w=vw*s,h=vh*s;cx.drawImage(vid,(W-w)/2,(H-h)*.42,w,h);return true}
+  if(H/W<1.2||!BANDE){const s=Math.max(W/vw,H/vh)*zoom,w=vw*s,h=vh*s;cx.drawImage(vid,(W-w)/2,(H-h)*.42,w,h);return true}
   // Téléphone (écran vertical) : au lieu de couper 75 % de l'image, on montre une bande plus large
   // qui se resserre doucement sur la Ferrari à mesure qu'elle avance, avec un fondu vers le noir en haut et en bas.
   const k=ease(clamp(vid.currentTime/vid.duration)),s=W*1.9/vw*(1+.75*k)*zoom,w=vw*s,h=Math.min(vh*s,H*1.1),sh=h/s;
