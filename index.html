@@ -62,7 +62,8 @@ nav.top ul a:hover:after{right:0}
 /* 1. intro vidéo */
 #intro .stage{background:#000}
 #intro canvas{position:absolute;inset:0;width:100%;height:100%;display:none}
-#intro video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 42%;transform-origin:50% 42%;background:#000}
+#intro video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 42%;transform-origin:50% 42%;background:#000;pointer-events:none}
+#intro video::-webkit-media-controls,#intro video::-webkit-media-controls-start-playback-button,#intro video::-webkit-media-controls-overlay-play-button{display:none!important;-webkit-appearance:none}
 #intro .shade{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 55%,transparent 35%,rgba(0,0,0,.75) 100%);pointer-events:none}
 #intro .t1,#intro .t2,#intro .t3{position:absolute;left:0;right:0;text-align:center;pointer-events:none}
 #intro .t1{top:50%;transform:translateY(-50%)}
@@ -295,7 +296,7 @@ footer .cols b{display:block;color:var(--fg);font-weight:400;margin-bottom:8px;l
 <!-- 1. INTRO : la vidéo pilotée par le scroll -->
 <section id="intro" class="pin" style="height:600vh">
   <div class="stage">
-    <video id="iv" muted playsinline preload="auto" poster="intro-poster.jpg" src="intro.mp4"></video>
+    <video id="iv" muted playsinline webkit-playsinline preload="auto" poster="intro-poster.jpg" disablepictureinpicture disableremoteplayback x-webkit-airplay="deny" tabindex="-1" aria-hidden="true"></video>
     <canvas></canvas>
     <div class="shade"></div>
     <div class="t1"><h1 class="serif">Vivez<br><em>l'extraordinaire</em></h1><p class="eyebrow">Montréal · Showroom · Club privé</p></div>
@@ -399,26 +400,72 @@ const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 
 // ---------- vidéo de l'intro, pilotée par le scroll ----------
 // Vidéo encodée "toutes images clés" : chaque position se décode instantanément, sans saccade.
-const FPS=24, cv=$('#intro canvas'), cx=cv.getContext('2d');
-const vid=$('#iv');vid.muted=true;
-let vReady=false,needDraw=true,vDone=false,seekAt=0;
-// iPhone : Safari ne charge pas une vidéo tant qu'elle n'a pas démarré. On la lance (muette) puis on la met en pause.
-function wake(){const pr=vid.play();if(pr&&pr.then)pr.then(()=>vid.pause()).catch(()=>{})}
-wake();addEventListener('touchstart',wake,{once:true,passive:true});
-// La taille du canvas suit sa vraie taille à l'écran (et pas la fenêtre) : sur iPhone, la barre d'adresse qui se replie
-// au premier scroll changeait la hauteur de la fenêtre et faisait "sauter" l'image.
-function fit(){const d=Math.min(devicePixelRatio||1,2),r=cv.getBoundingClientRect(),w=Math.round(r.width*d),h=Math.round(r.height*d);
-  if(w&&h&&(w!==cv.width||h!==cv.height)){cv.width=w;cv.height=h;needDraw=true}}
-fit();addEventListener('resize',fit);if(window.ResizeObserver)new ResizeObserver(fit).observe(cv);
+// ================= VIDÉO DE L'INTRO : règles =================
+// 1. Elle ne joue JAMAIS toute seule : la seule chose qui change l'image, c'est currentTime, piloté par le scroll.
+//    Toute tentative de lecture (navigateur, iPhone, touche média, retour d'onglet) est annulée sur-le-champ.
+// 2. L'image affichée correspond toujours à la position du scroll, y compris après être parti et revenu
+//    (autre onglet, autre appli, page restaurée depuis le cache, rechargement de la page).
+// 3. Si quelque chose bloque (recherche d'image figée, fichier mal chargé), la page relance d'elle-même.
+const FPS=24, NF=240;
+const vid=$('#iv');vid.muted=true;vid.defaultMuted=true;vid.autoplay=false;vid.loop=false;
+let vReady=false,vDone=false,seekAt=0,reqFrame=-1,snap=true,reloads=0,unlocking=false;
+const onFile=location.protocol==='file:';
+
+// -- chargement : en ligne, le fichier entier est téléchargé en mémoire avant d'être affiché ;
+//    ensuite chaque image est lue depuis la mémoire, sans réseau, donc aucune coupure possible.
 function loaderSet(k){$$('#loader .lights i').forEach((l,j)=>l.classList.toggle('on',j<Math.round(k*10)));$('#loader .n').textContent=Math.round(k*100)+'%'}
 function loaderDone(){if(vDone)return;vDone=true;loaderSet(1);$('#loader .lights').classList.add('flash');setTimeout(()=>$('#loader').classList.add('done'),600)}
-vid.addEventListener('progress',()=>{if(vid.duration&&vid.buffered.length){const k=vid.buffered.end(vid.buffered.length-1)/vid.duration;loaderSet(k);if(k>.99)loaderDone()}});
-const onReady=()=>{if(vid.readyState>=2){vReady=true;needDraw=true}};
-['loadedmetadata','loadeddata','canplay'].forEach(e=>vid.addEventListener(e,onReady));onReady();
-vid.addEventListener('error',()=>{vid.load()},{once:true});   // un essai de rechargement si le fichier a mal chargé
-vid.addEventListener('canplaythrough',loaderDone);
-vid.addEventListener('seeked',()=>{needDraw=true});
+async function loadVideo(){
+  if(!onFile&&window.fetch&&window.ReadableStream){
+    try{const r=await fetch('intro.mp4');if(!r.ok)throw 0;
+      const total=+r.headers.get('content-length')||0,rd=r.body.getReader(),parts=[];let got=0;
+      for(;;){const {done,value}=await rd.read();if(done)break;parts.push(value);got+=value.length;if(total)loaderSet(Math.min(.98,got/total))}
+      vid.src=URL.createObjectURL(new Blob(parts,{type:'video/mp4'}));vid.load();return}
+    catch(e){/* repli : lecture directe du fichier */}
+  }
+  vid.src='intro.mp4';vid.load();
+}
+loadVideo();
+vid.addEventListener('progress',()=>{if(vid.duration&&vid.buffered.length){const k=vid.buffered.end(vid.buffered.length-1)/vid.duration;if(onFile)loaderSet(k);if(k>.99)loaderDone()}});
+const onReady=()=>{if(vid.readyState>=1&&vid.duration){if(!vReady){vReady=true;snap=true}}if(vid.readyState>=3)loaderDone()};
+['loadedmetadata','loadeddata','canplay','canplaythrough'].forEach(e=>vid.addEventListener(e,onReady));
+function recover(){if(reloads>=3)return;reloads++;vReady=false;reqFrame=-1;const t=vid.currentTime||0;
+  vid.load();vid.addEventListener('loadedmetadata',()=>{try{vid.currentTime=t}catch(e){}},{once:true})}
+vid.addEventListener('error',recover);
 setTimeout(loaderDone,9000);
+
+// -- jamais de lecture
+const stopPlay=()=>{if(!unlocking&&!vid.paused)vid.pause()};
+['play','playing','timeupdate'].forEach(e=>vid.addEventListener(e,stopPlay));
+if(navigator.mediaSession)try{['play','pause','seekforward','seekbackward','seekto','nexttrack','previoustrack'].forEach(a=>navigator.mediaSession.setActionHandler(a,()=>{}))}catch(e){}
+
+// -- iPhone en mode économie d'énergie : Safari peut refuser de préparer les images tant que la vidéo n'a jamais été
+//    lancée. Seulement dans ce cas, au premier toucher, on la "déverrouille" : lecture et pause dans le même instant,
+//    à la position actuelle, puis on revient exactement à la bonne image. Rien ne défile.
+function unlock(){if(vid.readyState>=2)return;unlocking=true;const t=vid.currentTime;
+  const pr=vid.play();vid.pause();if(pr&&pr.catch)pr.catch(()=>{});
+  setTimeout(()=>{unlocking=false;vid.pause();try{vid.currentTime=t}catch(e){}snap=true;reqFrame=-1},60)}
+addEventListener('touchstart',unlock,{passive:true});addEventListener('pointerdown',unlock,{passive:true});
+
+// -- retour sur la page : on se recale immédiatement sur le scroll, sans animation, et on force l'affichage de l'image
+function resync(){vid.pause();snap=true;reqFrame=-1;seekAt=0;if(vid.error||(!vReady&&vid.networkState===3))recover()}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)resync();else vid.pause()});
+addEventListener('pageshow',resync);addEventListener('focus',resync);
+if('scrollRestoration' in history)history.scrollRestoration='auto';
+
+// -- appelé à chaque image d'écran par tick()
+function driveVideo(vp){
+  if(!vReady||!vid.duration)return;
+  const T=vp*(vid.duration-1/FPS);
+  if(snap){fcur=T;snap=false}else{fcur+=(T-fcur)*.3;if(Math.abs(T-fcur)<.002)fcur=T}
+  const f=Math.min(NF-1,Math.max(0,Math.floor(fcur*FPS+.5)));      // image entière la plus proche
+  const now=performance.now();
+  if(f!==reqFrame&&(!vid.seeking||now-seekAt>350)){                 // une seule demande à la fois, relance si elle traîne
+    if(!vid.paused)vid.pause();
+    try{vid.currentTime=(f+.5)/FPS}catch(e){}                        // milieu de l'image : jamais d'ambiguïté entre deux images
+    reqFrame=f;seekAt=now}
+  else if(f===reqFrame&&!vid.seeking&&Math.abs(vid.currentTime-(f+.5)/FPS)>.6/FPS){reqFrame=-1}   // position perdue : on redemande
+}
 
 
 // ---------- texte du manifeste mot par mot ----------
@@ -475,9 +522,7 @@ function tick(){
   // INTRO
   let p=prog($('#intro'));
   const vp=seg(p,.04,.78);                       // la vidéo se joue de 4% à 78% du scroll
-  if(vReady){const T=vp*(vid.duration-1/FPS);fcur+=(T-fcur)*.3;if(Math.abs(T-fcur)<.002)fcur=T;
-    const now=performance.now();
-    if((!vid.seeking||now-seekAt>400)&&Math.abs(vid.currentTime-fcur)>.25/FPS){if(!vid.paused)vid.pause();vid.currentTime=fcur;seekAt=now}}
+  driveVideo(vp);
   const z=1+.18*ease(seg(p,.74,1));             // petit zoom caméra à la fin
   if(z!==lastZ){vid.style.transform=z>1?`scale(${z})`:'';lastZ=z}
   const t1=$('#intro .t1');t1.style.opacity=1-seg(p,.03,.12);
