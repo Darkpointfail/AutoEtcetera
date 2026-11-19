@@ -296,7 +296,7 @@ footer .cols b{display:block;color:var(--fg);font-weight:400;margin-bottom:8px;l
 <!-- 1. INTRO : la vidéo pilotée par le scroll -->
 <section id="intro" class="pin" style="height:600vh">
   <div class="stage">
-    <video id="iv" muted playsinline webkit-playsinline preload="auto" poster="intro-poster.jpg" disablepictureinpicture disableremoteplayback x-webkit-airplay="deny" tabindex="-1" aria-hidden="true"></video>
+    <video id="iv" muted playsinline webkit-playsinline preload="auto" poster="assets/images/intro-poster.jpg" disablepictureinpicture disableremoteplayback x-webkit-airplay="deny" tabindex="-1" aria-hidden="true"></video>
     <canvas></canvas>
     <div class="shade"></div>
     <div class="t1"><h1 class="serif">Vivez<br><em>l'extraordinaire</em></h1><p class="eyebrow">Montréal · Showroom · Club privé</p></div>
@@ -417,13 +417,13 @@ function loaderSet(k){$$('#loader .lights i').forEach((l,j)=>l.classList.toggle(
 function loaderDone(){if(vDone)return;vDone=true;loaderSet(1);$('#loader .lights').classList.add('flash');setTimeout(()=>$('#loader').classList.add('done'),600)}
 async function loadVideo(){
   if(!onFile&&window.fetch&&window.ReadableStream){
-    try{const r=await fetch('intro.mp4');if(!r.ok)throw 0;
+    try{const r=await fetch('assets/video/intro.mp4');if(!r.ok)throw 0;
       const total=+r.headers.get('content-length')||0,rd=r.body.getReader(),parts=[];let got=0;
       for(;;){const {done,value}=await rd.read();if(done)break;parts.push(value);got+=value.length;if(total)loaderSet(Math.min(.98,got/total))}
       vid.src=URL.createObjectURL(new Blob(parts,{type:'video/mp4'}));vid.load();return}
     catch(e){/* repli : lecture directe du fichier */}
   }
-  vid.src='intro.mp4';vid.load();
+  vid.src='assets/video/intro.mp4';vid.load();
 }
 loadVideo();
 vid.addEventListener('progress',()=>{if(vid.duration&&vid.buffered.length){const k=vid.buffered.end(vid.buffered.length-1)/vid.duration;if(onFile)loaderSet(k);if(k>.99)loaderDone()}});

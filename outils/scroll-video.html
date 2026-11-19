@@ -1,0 +1,70 @@
+<!doctype html>
+<!--
+  SCROLL VIDÉO (repris du site Automobiles Etcetera)
+  1) Prépare ta vidéo : chaque image doit être une image clé, sinon ça saccade :
+     ffmpeg -i source.mp4 -an -vf "scale=1920:-2,fps=24" -c:v libx264 -g 1 -crf 22 -pix_fmt yuv420p -movflags +faststart ta-video.mp4
+  2) Remplace 'ta-video.mp4' ci-dessous.
+  Réglages : 600vh = longueur du scroll ; .04,.78 = début/fin de la vidéo dans le scroll ;
+  .18 = force du zoom final (0 pour l'enlever) ; .42 = cadrage vertical (0 haut, .5 centré).
+-->
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+  body{margin:0;background:#000}
+  #intro{height:600vh;position:relative}
+  #intro .stage{position:sticky;top:0;height:100vh;overflow:hidden;background:#000}
+  #intro canvas{position:absolute;inset:0;width:100%;height:100%}
+</style></head><body>
+
+<section id="intro"><div class="stage"><canvas></canvas>
+  <!-- tes textes par-dessus la vidéo vont ici -->
+</div></section>
+<section style="height:100vh;background:#111"></section>
+
+<script>
+const FPS=24, cv=document.querySelector('#intro canvas'), cx=cv.getContext('2d');
+const clamp=(v,a=0,b=1)=>Math.min(b,Math.max(a,v));
+const seg=(p,a,b)=>clamp((p-a)/(b-a));
+const ease=t=>1-Math.pow(1-t,3);
+const prog=el=>{const r=el.getBoundingClientRect();return clamp(-r.top/(r.height-innerHeight))};
+
+const vid=document.createElement('video');
+Object.assign(vid,{muted:true,playsInline:true,preload:'auto'});
+vid.setAttribute('muted','');vid.setAttribute('playsinline','');
+vid.src='ta-video.mp4';
+let vReady=false,needDraw=true,fcur=0,lastZ=0;
+
+// iPhone : Safari ne charge la vidéo qu'après un play ; on la lance muette puis pause
+function wake(){const p=vid.play();if(p&&p.then)p.then(()=>vid.pause()).catch(()=>{})}
+wake();addEventListener('touchstart',wake,{once:true,passive:true});
+
+// Le canvas suit sa vraie taille à l'écran (évite le saut de la barre d'adresse iPhone)
+function fit(){const d=Math.min(devicePixelRatio||1,2),r=cv.getBoundingClientRect(),
+  w=Math.round(r.width*d),h=Math.round(r.height*d);
+  if(w&&h&&(w!==cv.width||h!==cv.height)){cv.width=w;cv.height=h;needDraw=true}}
+fit();addEventListener('resize',fit);if(window.ResizeObserver)new ResizeObserver(fit).observe(cv);
+
+vid.addEventListener('loadeddata',()=>{vReady=true;needDraw=true});
+vid.addEventListener('seeked',()=>{needDraw=true});
+
+// Dessin "cover" (remplit l'écran) avec zoom
+function draw(zoom){if(!vReady)return false;
+  const W=cv.width,H=cv.height,vw=vid.videoWidth,vh=vid.videoHeight;
+  const s=Math.max(W/vw,H/vh)*zoom,w=vw*s,h=vh*s;
+  cx.imageSmoothingQuality='high';
+  cx.drawImage(vid,(W-w)/2,(H-h)*.42,w,h);return true}
+
+function tick(){
+  const p=prog(document.querySelector('#intro'));
+  const vp=seg(p,.04,.78);
+  if(vReady){
+    const T=vp*(vid.duration-1/FPS);
+    fcur+=(T-fcur)*.3; if(Math.abs(T-fcur)<.002)fcur=T;   // lissage
+    if(!vid.seeking&&Math.abs(vid.currentTime-fcur)>.25/FPS)vid.currentTime=fcur; // une seule demande à la fois
+  }
+  const z=1+.18*ease(seg(p,.74,1));
+  if((needDraw||z!==lastZ)&&draw(z)){needDraw=false;lastZ=z}
+  requestAnimationFrame(tick);
+}
+requestAnimationFrame(tick);
+</script>
+</body></html>
